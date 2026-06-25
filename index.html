@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistem Peminjaman Barang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F6F1;
+    --surface:#FFFFFF;
+    --ink:#1C2321;
+    --muted:#6B7066;
+    --border:#E1DFD3;
+    --primary:#2F5D50;
+    --primary-dark:#1F4338;
+    --primary-soft:#E7EFEA;
+    --accent:#D98E3B;
+    --accent-soft:#FBEDD9;
+    --danger:#C1463D;
+    --danger-soft:#F8E4E2;
+    --good:#3E8C6E;
+    --good-soft:#E3F0E9;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;}
+  .topbar{
+    background:var(--primary-dark);
+    color:#fff;
+    padding:22px 28px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .topbar .eyebrow{
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:#BFD9CC;
+    margin-bottom:4px;
+    display:block;
+  }
+  .topbar h1{font-size:22px;font-weight:600;}
+  .topbar .org-edit{
+    background:transparent;
+    border:none;
+    color:#fff;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:22px;
+    font-weight:600;
+    border-bottom:1px dashed rgba(255,255,255,.35);
+    padding:0 2px;
+    width:auto;
+    min-width:160px;
+  }
+  .topbar .org-edit:focus{outline:none;border-bottom-color:#fff;}
+
+  nav.tabs{
+    display:flex;
+    gap:4px;
+    padding:0 28px;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    overflow-x:auto;
+  }
+  nav.tabs button{
+    border:none;
+    background:transparent;
+    padding:14px 16px;
+    font-family:'Inter';
+    font-size:14px;
+    font-weight:600;
+    color:var(--muted);
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    white-space:nowrap;
+  }
+  nav.tabs button.active{
+    color:var(--primary-dark);
+    border-bottom-color:var(--primary);
+  }
+
+  main{padding:24px 28px 60px;max-width:1100px;margin:0 auto;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:26px;}
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px;
+  }
+  .card .num{font-family:'Space Grotesk';font-size:30px;font-weight:700;}
+  .card .label{font-size:13px;color:var(--muted);margin-top:2px;}
+  .card.warn .num{color:var(--accent);}
+  .card.bad .num{color:var(--danger);}
+  .card.good .num{color:var(--good);}
+
+  .section-head{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:14px;flex-wrap:wrap;gap:10px;
+  }
+  .section-head h2{font-size:18px;}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;}
+
+  input[type=text], input[type=number], input[type=date], select{
+    font-family:'Inter';
+    font-size:14px;
+    padding:9px 12px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:#fff;
+    color:var(--ink);
+  }
+  input:focus, select:focus, button:focus-visible{
+    outline:2px solid var(--primary);
+    outline-offset:1px;
+  }
+  button{
+    font-family:'Inter';
+    font-weight:600;
+    font-size:14px;
+    padding:9px 16px;
+    border-radius:8px;
+    border:1px solid var(--primary);
+    background:var(--primary);
+    color:#fff;
+    cursor:pointer;
+  }
+  button.secondary{
+    background:#fff;
+    color:var(--primary-dark);
+  }
+  button.ghost{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--muted);
+  }
+  button:hover{opacity:.92;}
+
+  table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);}
+  th,td{padding:11px 14px;text-align:left;font-size:13.5px;border-bottom:1px solid var(--border);}
+  th{background:#FAFAF6;color:var(--muted);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;}
+  tr:last-child td{border-bottom:none;}
+  td.num{text-align:right;font-family:'Space Grotesk';}
+
+  .stockbar{height:6px;background:var(--border);border-radius:4px;overflow:hidden;width:80px;}
+  .stockbar > div{height:100%;background:var(--good);}
+  .stockbar.low > div{background:var(--accent);}
+  .stockbar.empty > div{background:var(--danger);}
+
+  .badge{
+    display:inline-block;padding:3px 10px;border-radius:999px;
+    font-size:12px;font-weight:600;
+  }
+  .badge.dipinjam{background:var(--accent-soft);color:#8A5A1F;}
+  .badge.kembali{background:var(--good-soft);color:var(--good);}
+  .badge.telat{background:var(--danger-soft);color:var(--danger);}
+
+  .empty-state{
+    text-align:center;padding:50px 20px;color:var(--muted);
+    background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);
+  }
+  .empty-state strong{display:block;color:var(--ink);margin-bottom:4px;font-family:'Space Grotesk';}
+
+  .modal-backdrop{
+    position:fixed;inset:0;background:rgba(20,24,22,.45);
+    display:none;align-items:center;justify-content:center;padding:20px;z-index:50;
+  }
+  .modal-backdrop.show{display:flex;}
+  .modal{
+    background:#fff;border-radius:var(--radius);padding:24px;width:100%;max-width:420px;
+    box-shadow:0 20px 50px rgba(0,0,0,.2);
+  }
+  .modal h3{font-size:17px;margin-bottom:16px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:var(--ink);}
+  .field input, .field select{width:100%;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:20px;}
+
+  @media (max-width:560px){
+    .topbar{padding:18px 16px;}
+    main{padding:18px 16px 50px;}
+    th,td{padding:9px 8px;font-size:12.5px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <span class="eyebrow">Sistem Peminjaman Barang Ornganisasi Mahasiswa</span>
+    <h1><input class="org-edit" id="orgName" value="BEM Universitas Buyung" aria-label="Nama organisasi"></h1>
+  </div>
+</div>
+
+<nav class="tabs">
+  <button data-tab="dashboard" class="active">Dashboard</button>
+  <button data-tab="barang">Daftar Alat</button>
+  <button data-tab="peminjaman">Peminjaman</button>
+</nav>
+
+<main>
+
+
+  <!-- DASHBOARD -->
+  <section class="panel active" id="panel-dashboard">
+    <div class="cards">
+      <div class="card"><div class="num" id="statTotalBarang">0</div><div class="label">Jenis alat terdaftar</div></div>
+      <div class="card warn"><div class="num" id="statDipinjam">0</div><div class="label">Sedang dipinjam</div></div>
+      <div class="card bad"><div class="num" id="statTelat">0</div><div class="label">Terlambat dikembalikan</div></div>
+      <div class="card good"><div class="num" id="statTersedia">0</div><div class="label">Unit tersedia sekarang</div></div>
+    </div>
+
+    <div class="section-head"><h2>Peminjaman aktif</h2></div>
+    <div id="activeLoanList"></div>
+  </section>
+
+  <!-- BARANG -->
+  <section class="panel" id="panel-barang">
+    <div class="section-head">
+      <h2>Daftar Alat</h2>
+      <div class="toolbar">
+        <input type="text" id="searchBarang" placeholder="Cari nama alat...">
+        <button onclick="openBarangModal()">+ Tambah Alat</button>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Nama Alat</th><th>Kategori</th><th>Stok Tersedia</th><th></th></tr>
+      </thead>
+      <tbody id="barangTableBody"></tbody>
+    </table>
+  </section>
+
+  <!-- PEMINJAMAN -->
+  <section class="panel" id="panel-peminjaman">
+    <div class="section-head">
+      <h2>Catatan Peminjaman</h2>
+      <div class="toolbar">
+        <select id="filterStatus">
+          <option value="">Semua status</option>
+          <option value="Dipinjam">Dipinjam</option>
+          <option value="Kembali">Sudah kembali</option>
+          <option value="Telat">Telat</option>
+        </select>
+        <button onclick="openPinjamModal()">+ Catat Peminjaman</button>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Alat</th><th>Peminjam</th><th>Tgl Pinjam</th><th>Tgl Wajib Kembali</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody id="pinjamTableBody"></tbody>
+    </table>
+  </section>
+
+</main>
+
+<footer>Dibuat untuk Tugas Akhir · data tersimpan di Google Sheets</footer>
+
+<!-- MODAL: Tambah Alat -->
+<div class="modal-backdrop" id="modalBarang">
+  <div class="modal">
+    <h3>Tambah Alat Baru</h3>
+    <div class="field"><label>Nama alat</label><input type="text" id="inpNamaBarang"></div>
+    <div class="field"><label>Kategori</label>
+      <select id="inpKategori">
+        <option>Elektronik</option>
+        <option>Perlengkapan Acara</option>
+        <option>ATK</option>
+        <option>Alat Olahraga</option>
+        <option>Peralatan Teknis</option>
+      </select>
+    </div>
+    <div class="field"><label>Jumlah stok</label><input type="number" id="inpStok" min="0" value="1"></div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeModal('modalBarang')">Batal</button>
+      <button onclick="saveBarang()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Catat Peminjaman -->
+<div class="modal-backdrop" id="modalPinjam">
+  <div class="modal">
+    <h3>Catat Peminjaman</h3>
+    <div class="field"><label>Alat yang dipinjam</label><select id="inpAlatPinjam"></select></div>
+    <div class="field"><label>Nama peminjam</label><input type="text" id="inpPeminjam" placeholder="Nama lengkap"></div>
+    <div class="field"><label>Keperluan</label><input type="text" id="inpKeperluan" placeholder="cth: acara Malam Inagurasi"></div>
+    <div class="field"><label>Tanggal pinjam</label><input type="date" id="inpTglPinjam"></div>
+    <div class="field"><label>Wajib kembali</label><input type="date" id="inpTglKembali"></div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeModal('modalPinjam')">Batal</button>
+      <button onclick="savePinjam()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9BEmSd2-HY0HWVLiRJM-XYUmK7hou95jy9kjwA82ZvM6m8nP14BxSbWxvsT9InwcstQ/exec";
+
+// Content-Type text/plain dipakai supaya browser tidak kirim CORS
+// preflight (OPTIONS) yang tidak didukung Apps Script Web App.
+async function postToScript(payload){
+  const res = await fetch(SCRIPT_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  });
+  return await res.json();
+}
+
+async function getBarang(){
+  const res = await fetch(`${SCRIPT_URL}?action=getBarang`);
+  return await res.json();
+}
+async function getPeminjaman(){
+  const res = await fetch(`${SCRIPT_URL}?action=getPeminjaman`);
+  return await res.json();
+}
+async function addBarangRow(row){
+  await postToScript({ action:"addBarang", data: row });
+}
+async function addPeminjamanRow(row){
+  await postToScript({ action:"addPeminjaman", data: row });
+}
+async function updatePeminjamanStatus(no, status, tglKembaliAktual){
+  await postToScript({ action:"updateStatus", no, status, tglKembaliAktual });
+}
+
+let barangCache = [];
+let pinjamCache = [];
+
+function fmtDate(d){
+  if(!d) return "—";
+  const dt = new Date(d);
+  return dt.toLocaleDateString("id-ID", {day:"numeric", month:"short", year:"numeric"});
+}
+
+function stokTersedia(namaBarang){
+  const item = barangCache.find(b=>b["Nama Barang"]===namaBarang);
+  if(!item) return 0;
+  const dipinjamSekarang = pinjamCache.filter(p=>p["Nama Barang"]===namaBarang && p.Status!=="Kembali").length;
+  return Math.max(0, Number(item.Stok) - dipinjamSekarang);
+}
+
+function deriveStatus(p){
+  if(p.Status === "Kembali") return "Kembali";
+  const today = new Date().toISOString().slice(0,10);
+  if(p["Tanggal Wajib Kembali"] && today > p["Tanggal Wajib Kembali"]) return "Telat";
+  return "Dipinjam";
+}
+
+async function refreshAll(){
+  barangCache = await getBarang();
+  pinjamCache = await getPeminjaman();
+  pinjamCache.forEach(p => p.Status = deriveStatus(p));
+  renderDashboard();
+  renderBarang();
+  renderPeminjaman();
+  populateAlatSelect();
+}
+
+function renderDashboard(){
+  document.getElementById("statTotalBarang").textContent = barangCache.length;
+  const dipinjam = pinjamCache.filter(p=>p.Status==="Dipinjam").length;
+  const telat = pinjamCache.filter(p=>p.Status==="Telat").length;
+  document.getElementById("statDipinjam").textContent = dipinjam;
+  document.getElementById("statTelat").textContent = telat;
+  const totalTersedia = barangCache.reduce((sum,b)=>sum + stokTersedia(b["Nama Barang"]), 0);
+  document.getElementById("statTersedia").textContent = totalTersedia;
+
+  const active = pinjamCache.filter(p=>p.Status!=="Kembali");
+  const list = document.getElementById("activeLoanList");
+  if(active.length === 0){
+    list.innerHTML = `<div class="empty-state"><strong>Belum ada peminjaman aktif</strong>Semua alat sedang tersedia di gudang.</div>`;
+    return;
+  }
+  list.innerHTML = `<table><thead><tr><th>Alat</th><th>Peminjam</th><th>Wajib kembali</th><th>Status</th></tr></thead><tbody>` +
+    active.map(p=>{
+      return `<tr>
+        <td>${p["Nama Barang"]}</td>
+        <td>${p["Nama Peminjam"]}</td>
+        <td>${fmtDate(p["Tanggal Wajib Kembali"])}</td>
+        <td>${badge(p.Status)}</td>
+      </tr>`;
+    }).join("") + `</tbody></table>`;
+}
+
+function badge(status){
+  const cls = status === "Telat" ? "telat" : status === "Kembali" ? "kembali" : "dipinjam";
+  return `<span class="badge ${cls}">${status}</span>`;
+}
+
+function renderBarang(){
+  const q = (document.getElementById("searchBarang").value || "").toLowerCase();
+  const rows = barangCache.filter(b => b["Nama Barang"].toLowerCase().includes(q));
+  const body = document.getElementById("barangTableBody");
+  if(rows.length === 0){
+    body.innerHTML = `<tr><td colspan="4"><div class="empty-state"><strong>Tidak ditemukan</strong>Coba kata kunci lain.</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map(b=>{
+    const nama = b["Nama Barang"];
+    const stok = Number(b.Stok);
+    const tersedia = stokTersedia(nama);
+    const ratio = stok > 0 ? tersedia / stok : 0;
+    const barClass = tersedia === 0 ? "empty" : ratio < 0.34 ? "low" : "";
+    return `<tr>
+      <td>${nama}</td>
+      <td>${b.Kategori}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="stockbar ${barClass}"><div style="width:${Math.round(ratio*100)}%"></div></div>
+          <span style="font-size:13px;color:var(--muted)">${tersedia}/${stok}</span>
+        </div>
+      </td>
+      <td></td>
+    </tr>`;
+  }).join("");
+}
+
+function renderPeminjaman(){
+  const filter = document.getElementById("filterStatus").value;
+  const rows = pinjamCache.filter(p => !filter || p.Status === filter)
+                          .sort((a,b)=> (a["Tanggal Pinjam"] < b["Tanggal Pinjam"] ? 1 : -1));
+  const body = document.getElementById("pinjamTableBody");
+  if(rows.length === 0){
+    body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><strong>Belum ada catatan</strong>Klik "Catat Peminjaman" untuk menambah.</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map(p=>{
+    const actionBtn = p.Status !== "Kembali"
+      ? `<button class="secondary" style="padding:6px 12px;font-size:12.5px;" onclick="tandaiKembali('${p.No}')">Tandai kembali</button>`
+      : `<span style="color:var(--muted);font-size:12.5px;">selesai ${fmtDate(p["Tanggal Kembali Aktual"])}</span>`;
+    return `<tr>
+      <td>${p["Nama Barang"]}</td>
+      <td>${p["Nama Peminjam"]}<div style="font-size:12px;color:var(--muted)">${p.Keperluan||""}</div></td>
+      <td>${fmtDate(p["Tanggal Pinjam"])}</td>
+      <td>${fmtDate(p["Tanggal Wajib Kembali"])}</td>
+      <td>${badge(p.Status)}</td>
+      <td>${actionBtn}</td>
+    </tr>`;
+  }).join("");
+}
+
+function populateAlatSelect(){
+  const sel = document.getElementById("inpAlatPinjam");
+  sel.innerHTML = barangCache.map(b=>{
+    const nama = b["Nama Barang"];
+    const tersedia = stokTersedia(nama);
+    return `<option value="${nama}" ${tersedia===0?"disabled":""}>${nama} (${tersedia} tersedia)</option>`;
+  }).join("");
+}
+
+// FORM ACTIONS
+
+function openModal(id){ document.getElementById(id).classList.add("show"); }
+function closeModal(id){ document.getElementById(id).classList.remove("show"); }
+
+function openBarangModal(){
+  document.getElementById("inpNamaBarang").value = "";
+  document.getElementById("inpStok").value = 1;
+  openModal("modalBarang");
+}
+async function saveBarang(){
+  const nama = document.getElementById("inpNamaBarang").value.trim();
+  if(!nama){ alert("Nama alat wajib diisi."); return; }
+  const row = {
+    "Nama Barang": nama,
+    "Kategori": document.getElementById("inpKategori").value,
+    "Stok": Number(document.getElementById("inpStok").value) || 1
+  };
+  await addBarangRow(row);
+  closeModal("modalBarang");
+  refreshAll();
+}
+
+function openPinjamModal(){
+  document.getElementById("inpPeminjam").value = "";
+  document.getElementById("inpKeperluan").value = "";
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById("inpTglPinjam").value = today;
+  document.getElementById("inpTglKembali").value = today;
+  openModal("modalPinjam");
+}
+async function savePinjam(){
+  const peminjam = document.getElementById("inpPeminjam").value.trim();
+  const namaBarang = document.getElementById("inpAlatPinjam").value;
+  if(!peminjam){ alert("Nama peminjam wajib diisi."); return; }
+  if(!namaBarang){ alert("Pilih alat yang ingin dipinjam."); return; }
+  const row = {
+    "Nama Barang": namaBarang,
+    "Nama Peminjam": peminjam,
+    "Keperluan": document.getElementById("inpKeperluan").value.trim(),
+    "Tanggal Pinjam": document.getElementById("inpTglPinjam").value,
+    "Tanggal Wajib Kembali": document.getElementById("inpTglKembali").value,
+    "Tanggal Kembali Aktual": "",
+    "Status": "Dipinjam"
+  };
+  await addPeminjamanRow(row);
+  closeModal("modalPinjam");
+  refreshAll();
+}
+
+async function tandaiKembali(no){
+  const today = new Date().toISOString().slice(0,10);
+  await updatePeminjamanStatus(no, "Kembali", today);
+  refreshAll();
+}
+
+document.querySelectorAll("nav.tabs button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("panel-"+btn.dataset.tab).classList.add("active");
+  });
+});
+document.getElementById("searchBarang").addEventListener("input", renderBarang);
+document.getElementById("filterStatus").addEventListener("change", renderPeminjaman);
+document.querySelectorAll(".modal-backdrop").forEach(m=>{
+  m.addEventListener("click", e=>{ if(e.target === m) m.classList.remove("show"); });
+});
+
+refreshAll();
+</script>
+</body>
+</html>
