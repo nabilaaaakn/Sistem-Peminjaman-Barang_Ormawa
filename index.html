@@ -33,16 +33,34 @@
     -webkit-font-smoothing:antialiased;
   }
   h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;}
+
+  /* Saat belum login, sembunyikan aplikasi & tampilkan layar login */
+  body.locked .topbar,
+  body.locked nav.tabs,
+  body.locked main,
+  body.locked footer{display:none;}
+
   .topbar{
     background:var(--primary-dark);
     color:#fff;
     padding:22px 28px;
     display:flex;
-    align-items:baseline;
+    align-items:center;
     justify-content:space-between;
     flex-wrap:wrap;
-    gap:8px;
+    gap:14px;
   }
+  .brand{display:flex;align-items:center;gap:14px;min-width:0;}
+  .logo{
+    width:48px;height:48px;flex:none;
+    border-radius:12px;
+    background:#F5F6F1;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    box-shadow:0 2px 8px rgba(0,0,0,.18);
+  }
+  .logo img{width:100%;height:100%;object-fit:contain;}
+  .logo svg{width:28px;height:28px;}
   .topbar .eyebrow{
     font-size:12px;
     letter-spacing:.08em;
@@ -65,6 +83,22 @@
     min-width:160px;
   }
   .topbar .org-edit:focus{outline:none;border-bottom-color:#fff;}
+  .topbar .org-edit:read-only{border-bottom-color:transparent;cursor:default;}
+
+  .user-area{display:flex;align-items:center;gap:10px;}
+  .user-chip{
+    font-size:13px;font-weight:600;color:#EAF2EE;
+    background:rgba(255,255,255,.12);
+    padding:6px 12px;border-radius:999px;
+    white-space:nowrap;
+  }
+  .topbar .logout-btn{
+    background:transparent;
+    border:1px solid rgba(255,255,255,.4);
+    color:#fff;
+    padding:7px 14px;
+  }
+  .topbar .logout-btn:hover{background:rgba(255,255,255,.12);opacity:1;}
 
   nav.tabs{
     display:flex;
@@ -115,7 +149,7 @@
   .section-head h2{font-size:18px;}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;}
 
-  input[type=text], input[type=number], input[type=date], select{
+  input[type=text], input[type=number], input[type=date], input[type=password], select{
     font-family:'Inter';
     font-size:14px;
     padding:9px 12px;
@@ -149,6 +183,7 @@
     color:var(--muted);
   }
   button:hover{opacity:.92;}
+  button:disabled{opacity:.55;cursor:not-allowed;}
 
   table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);}
   th,td{padding:11px 14px;text-align:left;font-size:13.5px;border-bottom:1px solid var(--border);}
@@ -192,6 +227,37 @@
 
   footer{text-align:center;color:var(--muted);font-size:12px;padding:20px;}
 
+  /* ===== Layar Login ===== */
+  #loginScreen{
+    display:none;
+    position:fixed;inset:0;z-index:100;
+    align-items:center;justify-content:center;padding:20px;
+    background:radial-gradient(circle at 30% 20%, #2A5447 0%, var(--primary-dark) 55%, #16352C 100%);
+  }
+  body.locked #loginScreen{display:flex;}
+  .login-card{
+    background:var(--surface);
+    border-radius:14px;
+    padding:34px 30px 28px;
+    width:100%;max-width:380px;
+    box-shadow:0 24px 60px rgba(0,0,0,.35);
+  }
+  .login-eyebrow{
+    font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--primary);font-weight:700;display:block;margin-bottom:8px;
+  }
+  .login-card h2{font-size:23px;margin-bottom:4px;}
+  .login-sub{font-size:13.5px;color:var(--muted);margin:0 0 22px;}
+  .login-card .field{margin-bottom:15px;}
+  .login-error{
+    color:var(--danger);font-size:13px;font-weight:600;
+    min-height:18px;margin:2px 0 4px;
+  }
+  .login-hint{
+    font-size:11.5px;color:var(--muted);text-align:center;
+    margin-top:16px;line-height:1.5;
+  }
+
   @media (max-width:560px){
     .topbar{padding:18px 16px;}
     main{padding:18px 16px 50px;}
@@ -199,12 +265,50 @@
   }
 </style>
 </head>
-<body>
+<body class="locked">
 
+<!-- ===== LAYAR LOGIN ===== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <span class="login-eyebrow">Sistem Peminjaman Barang Ormawa</span>
+    <h2>Masuk ke Sistem</h2>
+    <p class="login-sub">Login dulu untuk mengakses data peminjaman.</p>
+    <div class="field">
+      <label for="loginUser">Username</label>
+      <input type="text" id="loginUser" autocomplete="username" style="width:100%">
+    </div>
+    <div class="field">
+      <label for="loginPass">Password</label>
+      <input type="password" id="loginPass" autocomplete="current-password" style="width:100%">
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <button id="loginBtn" style="width:100%" onclick="doLogin()">Masuk</button>
+    <div class="login-hint">
+      <strong>Admin</strong> dapat mengelola seluruh data.<br>
+      <strong>User</strong> hanya dapat mencatat peminjaman.
+    </div>
+  </div>
+</div>
+
+<!-- ===== APLIKASI ===== -->
 <div class="topbar">
-  <div>
-    <span class="eyebrow">Sistem Peminjaman Barang Ornganisasi Mahasiswa</span>
-    <h1><input class="org-edit" id="orgName" value="BEM Universitas Buyung" aria-label="Nama organisasi"></h1>
+  <div class="brand">
+    <div class="logo" id="appLogo">
+      <img src="Logo.jpeg" alt="Logo BEM">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9Z" stroke="#2F5D50" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="m3 7.5 9 4.5 9-4.5M12 12v9" stroke="#2F5D50" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M7.5 5.25 16.5 9.75" stroke="#D98E3B" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div>
+      <span class="eyebrow">Sistem Peminjaman Barang Organisasi Mahasiswa</span>
+      <h1><input class="org-edit" id="orgName" value="BEM Universitas Buyung" aria-label="Nama organisasi"></h1>
+    </div>
+  </div>
+  <div class="user-area">
+    <span class="user-chip" id="userChip"></span>
+    <button class="logout-btn" onclick="doLogout()">Keluar</button>
   </div>
 </div>
 
@@ -215,7 +319,6 @@
 </nav>
 
 <main>
-
 
   <!-- DASHBOARD -->
   <section class="panel active" id="panel-dashboard">
@@ -236,7 +339,7 @@
       <h2>Daftar Alat</h2>
       <div class="toolbar">
         <input type="text" id="searchBarang" placeholder="Cari nama alat...">
-        <button onclick="openBarangModal()">+ Tambah Alat</button>
+        <button id="btnTambahAlat" onclick="openBarangModal()">+ Tambah Alat</button>
       </div>
     </div>
     <table>
@@ -314,6 +417,9 @@
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9BEmSd2-HY0HWVLiRJM-XYUmK7hou95jy9kjwA82ZvM6m8nP14BxSbWxvsT9InwcstQ/exec";
 
+/* ===== Status login (disimpan di memori, hilang saat halaman ditutup) ===== */
+let auth = { username:null, password:null, role:null };
+
 // Content-Type text/plain dipakai supaya browser tidak kirim CORS
 // preflight (OPTIONS) yang tidak didukung Apps Script Web App.
 async function postToScript(payload){
@@ -333,14 +439,15 @@ async function getPeminjaman(){
   const res = await fetch(`${SCRIPT_URL}?action=getPeminjaman`);
   return await res.json();
 }
+// Aksi tulis selalu menyertakan kredensial; server yang memutuskan boleh/tidak.
 async function addBarangRow(row){
-  await postToScript({ action:"addBarang", data: row });
+  return await postToScript({ action:"addBarang", data: row, username:auth.username, password:auth.password });
 }
 async function addPeminjamanRow(row){
-  await postToScript({ action:"addPeminjaman", data: row });
+  return await postToScript({ action:"addPeminjaman", data: row, username:auth.username, password:auth.password });
 }
 async function updatePeminjamanStatus(no, status, tglKembaliAktual){
-  await postToScript({ action:"updateStatus", no, status, tglKembaliAktual });
+  return await postToScript({ action:"updateStatus", no, status, tglKembaliAktual, username:auth.username, password:auth.password });
 }
 
 let barangCache = [];
@@ -444,10 +551,16 @@ function renderPeminjaman(){
     body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><strong>Belum ada catatan</strong>Klik "Catat Peminjaman" untuk menambah.</div></td></tr>`;
     return;
   }
+  const bisaKembalikan = auth.role === "admin"; // hanya admin yang boleh menandai pengembalian
   body.innerHTML = rows.map(p=>{
-    const actionBtn = p.Status !== "Kembali"
-      ? `<button class="secondary" style="padding:6px 12px;font-size:12.5px;" onclick="tandaiKembali('${p.No}')">Tandai kembali</button>`
-      : `<span style="color:var(--muted);font-size:12.5px;">selesai ${fmtDate(p["Tanggal Kembali Aktual"])}</span>`;
+    let actionBtn;
+    if(p.Status === "Kembali"){
+      actionBtn = `<span style="color:var(--muted);font-size:12.5px;">selesai ${fmtDate(p["Tanggal Kembali Aktual"])}</span>`;
+    } else if(bisaKembalikan){
+      actionBtn = `<button class="secondary" style="padding:6px 12px;font-size:12.5px;" onclick="tandaiKembali('${p.No}')">Tandai kembali</button>`;
+    } else {
+      actionBtn = `<span style="color:var(--muted);font-size:12.5px;">—</span>`;
+    }
     return `<tr>
       <td>${p["Nama Barang"]}</td>
       <td>${p["Nama Peminjam"]}<div style="font-size:12px;color:var(--muted)">${p.Keperluan||""}</div></td>
@@ -468,7 +581,60 @@ function populateAlatSelect(){
   }).join("");
 }
 
-// FORM ACTIONS
+/* ===== LOGIN / LOGOUT ===== */
+
+async function doLogin(){
+  const username = document.getElementById("loginUser").value.trim();
+  const password = document.getElementById("loginPass").value;
+  const errBox = document.getElementById("loginError");
+  const btn = document.getElementById("loginBtn");
+  errBox.textContent = "";
+
+  if(!username || !password){
+    errBox.textContent = "Username dan password wajib diisi.";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Memproses...";
+  try{
+    const res = await postToScript({ action:"login", username, password });
+    if(res && res.ok){
+      auth = { username, password, role: res.role };
+      applyRole();
+      document.getElementById("loginPass").value = "";
+      document.body.classList.remove("locked");
+      await refreshAll();
+    } else {
+      errBox.textContent = (res && res.error) || "Login gagal.";
+    }
+  } catch(err){
+    errBox.textContent = "Tidak bisa terhubung ke server. Cek koneksi / URL script.";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Masuk";
+  }
+}
+
+function applyRole(){
+  const isAdmin = auth.role === "admin";
+  document.getElementById("userChip").textContent = auth.username + " · " + auth.role;
+  // Hanya admin yang boleh menambah alat & mengubah nama ormawa.
+  document.getElementById("btnTambahAlat").style.display = isAdmin ? "" : "none";
+  document.getElementById("orgName").readOnly = !isAdmin;
+}
+
+function doLogout(){
+  auth = { username:null, password:null, role:null };
+  barangCache = [];
+  pinjamCache = [];
+  document.getElementById("loginUser").value = "";
+  document.getElementById("loginPass").value = "";
+  document.getElementById("loginError").textContent = "";
+  document.body.classList.add("locked");
+}
+
+/* ===== FORM ACTIONS ===== */
 
 function openModal(id){ document.getElementById(id).classList.add("show"); }
 function closeModal(id){ document.getElementById(id).classList.remove("show"); }
@@ -486,7 +652,8 @@ async function saveBarang(){
     "Kategori": document.getElementById("inpKategori").value,
     "Stok": Number(document.getElementById("inpStok").value) || 1
   };
-  await addBarangRow(row);
+  const res = await addBarangRow(row);
+  if(res && res.ok === false){ alert(res.error || "Gagal menyimpan alat."); return; }
   closeModal("modalBarang");
   refreshAll();
 }
@@ -513,16 +680,20 @@ async function savePinjam(){
     "Tanggal Kembali Aktual": "",
     "Status": "Dipinjam"
   };
-  await addPeminjamanRow(row);
+  const res = await addPeminjamanRow(row);
+  if(res && res.ok === false){ alert(res.error || "Gagal mencatat peminjaman."); return; }
   closeModal("modalPinjam");
   refreshAll();
 }
 
 async function tandaiKembali(no){
   const today = new Date().toISOString().slice(0,10);
-  await updatePeminjamanStatus(no, "Kembali", today);
+  const res = await updatePeminjamanStatus(no, "Kembali", today);
+  if(res && res.ok === false){ alert(res.error || "Gagal memperbarui status."); return; }
   refreshAll();
 }
+
+/* ===== EVENT LISTENER ===== */
 
 document.querySelectorAll("nav.tabs button").forEach(btn=>{
   btn.addEventListener("click", ()=>{
@@ -537,8 +708,13 @@ document.getElementById("filterStatus").addEventListener("change", renderPeminja
 document.querySelectorAll(".modal-backdrop").forEach(m=>{
   m.addEventListener("click", e=>{ if(e.target === m) m.classList.remove("show"); });
 });
+// Tekan Enter di kolom login = langsung masuk
+["loginUser","loginPass"].forEach(id=>{
+  document.getElementById(id).addEventListener("keydown", e=>{
+    if(e.key === "Enter") doLogin();
+  });
+});
 
-refreshAll();
 </script>
 </body>
 </html>
